@@ -1,0 +1,46 @@
+- task: TerraformInstaller@0
+    displayName: 'Install Terraform'
+    inputs:
+      terraformVersion: '$(terraformVersion)'
+
+  - task: Bash@3
+    displayName: 'Authenticate with GCP'
+    inputs:
+      targetType: 'inline'
+      script: |
+        # Create service account key file from the secret variable
+        echo "$(GCP_SERVICE_ACCOUNT_KEY)" > $(System.DefaultWorkingDirectory)/gcp-key.json
+        
+        # Set GOOGLE_APPLICATION_CREDENTIALS environment variable
+        export GOOGLE_APPLICATION_CREDENTIALS=$(System.DefaultWorkingDirectory)/gcp-key.json
+        
+        # Authenticate with GCP
+        echo "Authenticating with GCP..."
+        
+        # Optional: Install gcloud CLI if needed
+        # curl -O https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-latest.tar.gz
+        # tar -xf google-cloud-cli-latest.tar.gz
+        # ./google-cloud-sdk/install.sh --quiet
+        # export PATH=$PATH:$(pwd)/google-cloud-sdk/bin
+        # gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+      failOnStderr: false
+
+  - task: Bash@3
+    displayName: 'Terraform Init'
+    inputs:
+      targetType: 'inline'
+      script: |
+        cd terraform
+        terraform init
+    env:
+      GOOGLE_APPLICATION_CREDENTIALS: $(System.DefaultWorkingDirectory)/gcp-key.json
+
+  - task: Bash@3
+    displayName: 'Terraform Plan'
+    inputs:
+      targetType: 'inline'
+      script: |
+        cd terraform
+        terraform plan -out=tfplan
+    env:
+      GOOGLE_APPLICATION_CREDENTIALS: $(System.DefaultWorkingDirectory)/gcp-key.json
