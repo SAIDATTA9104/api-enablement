@@ -115,3 +115,16 @@ stages:
               rm -f $(workingDirectory)/$(serviceAccountKey)
             displayName: 'Clean up Service Account Key'
             condition: always()
+
+
+
+      provider "google" {
+  project     = var.project
+  region      = var.region
+  credentials = var.google_credentials
+}
+
+variable "google_credentials" {
+  description = "the contents of a service account key file in JSON format."
+  type = string
+}
